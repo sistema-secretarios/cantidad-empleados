@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas - Libro de Dictámenes (Defensoría 6)</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: var(--card);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 { margin: 0; font-size: 1.25rem; color: var(--primary); }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Alerta de Error */
+        #error-banner {
+            display: none;
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #fecaca;
+            font-size: 0.9rem;
+        }
+
+        /* Filtros */
+        .filter-card {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem; }
+        select { width: 100%; padding: 0.6rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem; }
+
+        /* KPIs */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border-top: 4px solid var(--primary);
+        }
+
+        .stat-card .value { font-size: 2.5rem; font-weight: 700; display: block; }
+        .stat-card .label { font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+
+        /* Dashboard Main */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 992px) { .dashboard-layout { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .panel-title { font-weight: 700; font-size: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; }
+
+        /* Barras */
+        .data-row { margin-bottom: 1rem; }
+        .data-info { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.3rem; }
+        .progress-bg { background: #f1f5f9; height: 10px; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.6s ease; }
+
+        #loader {
+            position: fixed; inset: 0; background: white; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <i class="fas fa-chart-pie fa-spin fa-3x" style="color: var(--primary);"></i>
+        <p style="margin-top: 1rem; font-weight: 600;">Cargando datos del Libro de Dictámenes...</p>
+    </div>
+
+    <header>
+        <h1>Defensoría 6 - Estadísticas por Empleado</h1>
+        <div style="font-size: 0.8rem; font-weight: 600; color: #64748b;">MÓDULO: DICTÁMENES</div>
+    </header>
+
+    <main class="container">
+        <div id="error-banner">
+            <i class="fas fa-exclamation-triangle"></i> <span id="error-text"></span>
+        </div>
+
+        <section class="filter-card">
+            <div class="filter-grid">
+                <div>
+                    <label><i class="fas fa-user"></i> Filtrar Personal:</label>
+                    <select id="userFilter">
+                        <option value="todos">--- Resumen General ---</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span class="value" id="kpiTotal">0</span>
+                <span class="label">Total Dictámenes</span>
+            </div>
+            <div class="stat-card" style="border-top-color: var(--success);">
+                <span class="value" id="kpiFirmados">0</span>
+                <span class="label">Firmados por Defensor</span>
+            </div>
+            <div class="stat-card" style="border-top-color: var(--warning);">
+                <span class="value" id="kpiPorcentaje">0%</span>
+                <span class="label">Efectividad Firma</span>
+            </div>
+        </section>
+
+        <section class="dashboard-layout">
+            <div class="panel">
+                <h2 class="panel-title"><i class="fas fa-list-ol"></i> Distribución por Temáticas</h2>
+                <div id="tematicaList"></div>
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title" id="secundarioTitle"><i class="fas fa-users"></i> Productividad por Empleado</h2>
+                <div id="rankingList"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Configuración de Firebase (Extraída de tu dictamen.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCA4PlV7FpUZsRSqJaFQrCRoKyShwpPQac",
+            authDomain: "librodictamen.firebaseapp.com",
+            projectId: "librodictamen",
+            storageBucket: "librodictamen.firebasestorage.app",
+            messagingSenderId: "5128868565",
+            appId: "1:5128868565:web:86552a8a8677c385c3383e"
+        };
+
+        // 2. Lista de Empleados (Basada en tu archivo dictamen.html)
+        const personal = [
+            "Bazante Nadia Romina", "Cardozo Maria Raquel", "Cedron Noelia Aurora", 
+            "Corrales Alicia Mariela", "Escobar Monica Graciela", "Fioravante Romulo", 
+            "Gonzalez Alberto Misael", "Gonzalez Juan Jose", "Gudiño Natalia Esther", 
+            "Magnani Enzo Luciano", "Pablos Patricia", "Palacios Ana Gabriela", 
+            "Ramos Marcelo Gustavo", "Riveros Patricia Soledad", "Sosa Rita Cecilia"
+        ];
+
+        let dictamenes = [];
+
+        // Inicializar Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            var db = firebase.firestore();
+        } catch (err) {
+            showError("Error al inicializar Firebase: " + err.message);
+        }
+
+        function init() {
+            // Llenar selector de usuarios
+            const select = document.getElementById('userFilter');
+            personal.sort().forEach(p => {
+                select.add(new Option(p, p));
+            });
+
+            // Leer datos en tiempo real de la colección "dictamenes"
+            db.collection("dictamenes").onSnapshot((snapshot) => {
+                dictamenes = [];
+                snapshot.forEach(doc => dictamenes.push(doc.data()));
+                render();
+                document.getElementById('loader').style.display = 'none';
+            }, (error) => {
+                showError("No se pudo conectar a Firebase: " + error.message + ". Verifica las reglas de seguridad.");
+                document.getElementById('loader').style.display = 'none';
+            });
+        }
+
+        function render() {
+            const user = document.getElementById('userFilter').value;
+            const filtrados = user === 'todos' ? dictamenes : dictamenes.filter(d => d.assignedUser === user);
+
+            // KPIs
+            const total = filtrados.length;
+            // Manejamos 'firmaDefensor' tanto si es Booleano como si es texto "Sí"
+            const firmados = filtrados.filter(d => d.firmaDefensor === true || d.firmaDefensor === "Sí").length;
+            const porc = total > 0 ? Math.round((firmados / total) * 100) : 0;
+
+            document.getElementById('kpiTotal').innerText = total;
+            document.getElementById('kpiFirmados').innerText = firmados;
+            document.getElementById('kpiPorcentaje').innerText = porc + "%";
+
+            // Temáticas
+            renderBars(filtrados, 'topic', 'tematicaList');
+
+            // Ranking o Estado
+            const title = document.getElementById('secundarioTitle');
+            if (user === 'todos') {
+                title.innerHTML = '<i class="fas fa-users"></i> Productividad por Empleado';
+                renderBars(filtrados, 'assignedUser', 'rankingList', true);
+            } else {
+                title.innerHTML = '<i class="fas fa-info-circle"></i> Estado de Trámites';
+                renderDetalleFirma(filtrados);
+            }
+        }
+
+        function renderBars(data, key, containerId, useMaxAsScale = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            const counts = {};
+            data.forEach(d => {
+                const label = d[key] || "Sin asignar";
+                counts[label] = (counts[label] || 0) + 1;
+            });
+
+            const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+            const scaleMax = useMaxAsScale ? (sorted[0] ? sorted[0][1] : 1) : data.length;
+
+            sorted.forEach(([label, cant]) => {
+                const width = (cant / scaleMax * 100).toFixed(0);
+                container.innerHTML += `
+                    <div class="data-row">
+                        <div class="data-info">
+                            <span>${label}</span>
+                            <strong>${cant}</strong>
+                        </div>
+                        <div class="progress-bg">
+                            <div class="progress-fill" style="width: ${width}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderDetalleFirma(data) {
+            const container = document.getElementById('rankingList');
+            const firmados = data.filter(d => d.firmaDefensor === true || d.firmaDefensor === "Sí").length;
+            const pendientes = data.length - firmados;
+            
+            container.innerHTML = `
+                <div class="data-row">
+                    <div class="data-info"><span>Dictámenes con Firma</span><strong>${firmados}</strong></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: ${data.length > 0 ? (firmados/data.length*100) : 0}%; background: var(--success)"></div></div>
+                </div>
+                <div class="data-row" style="margin-top:1.5rem">
+                    <div class="data-info"><span>Pendientes de Firma</span><strong>${pendientes}</strong></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: ${data.length > 0 ? (pendientes/data.length*100) : 0}%; background: var(--warning)"></div></div>
+                </div>
+            `;
+        }
+
+        function showError(msg) {
+            const banner = document.getElementById('error-banner');
+            banner.style.display = 'block';
+            document.getElementById('error-text').innerText = msg;
+        }
+
+        document.getElementById('userFilter').addEventListener('change', render);
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defensoría Civil y Comercial 6 Estadística por empleado</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-dark: #0056b3;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --zimbra: #6610f2;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #212529;
+            --muted: #6c757d;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 1.6rem; }
+        header p { margin: 5px 0 0; opacity: 0.9; font-size: 0.9rem; }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Panel de Control */
+        .control-panel {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .user-select {
+            flex: 1;
+            min-width: 280px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* KPIs */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            border-bottom: 4px solid transparent;
+        }
+
+        .kpi-card h3 { font-size: 2.2rem; margin: 10px 0; }
+        .kpi-card p { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin: 0; }
+        .kpi-card i { font-size: 1.2rem; margin-bottom: 5px; }
+
+        .kpi-total { border-color: var(--primary); }
+        .kpi-presencial { border-color: var(--success); color: var(--success); }
+        .kpi-telefonica { border-color: var(--warning); color: #b36a00; }
+        .kpi-whatsapp { border-color: #af52de; color: #af52de; }
+        .kpi-zimbra { border-color: var(--danger); color: var(--danger); }
+
+        /* Dashboard Body */
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 25px;
+        }
+
+        .chart-card h4 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Barras de Progreso */
+        .stat-item { margin-bottom: 15px; }
+        .stat-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; }
+        .stat-label { font-weight: 500; }
+        .progress-container { background: #e9ecef; height: 10px; border-radius: 5px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.6s ease; }
+
+        #loader {
+            position: fixed; inset: 0; background: white; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <i class="fas fa-chart-line fa-spin fa-3x" style="color: var(--primary);"></i>
+        <p style="margin-top: 15px; font-weight: 500;">Sincronizando con Realtime Database...</p>
+    </div>
+
+    <header>
+        <div class="container" style="padding:0">
+            <h1>Defensoría Civil y Comercial 6</h1>
+            <p>Estadística por empleado · Panel de Gestión</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="control-panel">
+            <div style="flex:1">
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--muted); display: block; margin-bottom: 5px;">SELECCIONAR EMPLEADO</label>
+                <select id="userSelector" class="user-select">
+                    <option value="todos">--- Resumen General (Toda la Defensoría) ---</option>
+                </select>
+            </div>
+            <div id="infoTag" style="font-size: 0.85rem; color: var(--muted);">
+                Datos actualizados en tiempo real
+            </div>
+        </div>
+
+        <section class="kpi-grid">
+            <div class="kpi-card kpi-total">
+                <i class="fas fa-users"></i>
+                <p>Total Atenciones</p>
+                <h3 id="statTotal">0</h3>
+            </div>
+            <div class="kpi-card kpi-presencial">
+                <i class="fas fa-walking"></i>
+                <p>Presenciales</p>
+                <h3 id="statPresencial">0</h3>
+            </div>
+            <div class="kpi-card kpi-telefonica">
+                <i class="fas fa-phone"></i>
+                <p>Telefónicas</p>
+                <h3 id="statTelefonica">0</h3>
+            </div>
+            <div class="kpi-card kpi-whatsapp">
+                <i class="fab fa-whatsapp"></i>
+                <p>WhatsApp</p>
+                <h3 id="statWhatsapp">0</h3>
+            </div>
+            <div class="kpi-card kpi-zimbra">
+                <i class="fas fa-envelope"></i>
+                <p>Zimbra</p>
+                <h3 id="statZimbra">0</h3>
+            </div>
+        </section>
+
+        <section class="dashboard-row">
+            <div class="chart-card">
+                <h4><i class="fas fa-balance-scale"></i> Tipos de Procesos</h4>
+                <div id="listProcesos"></div>
+            </div>
+            <div class="chart-card">
+                <h4 id="secundarioTitle"><i class="fas fa-chart-bar"></i> Ranking de Carga</h4>
+                <div id="listSecundaria"></div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // Configuración idéntica a tu archivo atencion-publico.html
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgxLS98sk6GkLrjMu3BVS2cmZ9exdh4dY",
+            authDomain: "atencion-publico-def6.firebaseapp.com",
+            databaseURL: "https://atencion-publico-def6-default-rtdb.firebaseio.com",
+            projectId: "atencion-publico-def6",
+            storageBucket: "atencion-publico-def6.firebasestorage.app",
+            messagingSenderId: "1052433106688",
+            appId: "1:1052433106688:web:8ac3e144bcf377ac4b55e5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        // Listado fijo de empleados del archivo original
+        const empleados = ["Bazante Nadia Romina","Boillat Cesar Enrique","Cardozo Maria Raquel","Cedron Noelia Aurora","Corrales Alicia Mariela","Escobar Monica Graciela","Fioravante Romulo","Gonzalez Alberto Misael","Gonzalez Juan Jose","Gudiño Natalia Esther","Magnani Enzo Luciano","Pablos Patricia","Palacios Ana Gabriela","Ortega Lucia Noemi","Ramos Marcelo Gustavo","Riveros Patricia Soledad","Sosa Rita Cecilia"];
+
+        let registros = [];
+        const userSelector = document.getElementById('userSelector');
+
+        function init() {
+            // Poblar dropdown
+            empleados.forEach(e => {
+                const opt = document.createElement('option');
+                opt.value = e;
+                opt.textContent = e;
+                userSelector.appendChild(opt);
+            });
+
+            // Escuchar cambios en Realtime Database
+            const baseRef = ref(db, "atencion");
+            onValue(baseRef, (snapshot) => {
+                const data = snapshot.val();
+                registros = data ? Object.values(data) : [];
+                actualizarDashboard();
+                document.getElementById('loader').style.display = 'none';
+            });
+        }
+
+        function actualizarDashboard() {
+            const user = userSelector.value;
+            const isGlobal = user === 'todos';
+            
+            // Filtrar datos
+            const filtrados = isGlobal ? registros : registros.filter(r => r.assignedUser === user);
+
+            // 1. KPIs
+            const total = filtrados.length;
+            document.getElementById('statTotal').innerText = total;
+            document.getElementById('statPresencial').innerText = filtrados.filter(r => r.type === 'presencial').length;
+            document.getElementById('statTelefonica').innerText = filtrados.filter(r => r.type === 'telefonica').length;
+            document.getElementById('statWhatsapp').innerText = filtrados.filter(r => r.type === 'whatsapp').length;
+            document.getElementById('statZimbra').innerText = filtrados.filter(r => r.type === 'zimbra').length;
+
+            // 2. Gráfico por Tipo de Atención
+            renderBarras(filtrados, 'type', 'listProcesos');
+
+            // 3. Gráfico Secundario
+            if(isGlobal) {
+                document.getElementById('secundarioTitle').innerHTML = '<i class="fas fa-users"></i> Ranking por Usuario';
+                renderBarras(filtrados, 'assignedUser', 'listSecundaria', true);
+            } else {
+                document.getElementById('secundarioTitle').innerHTML = '<i class="fas fa-calendar-day"></i> Distribución de Atención';
+                // En modo individual, mostramos el desglose de sus estados o tipos
+                renderBarras(filtrados, 'type', 'listSecundaria');
+            }
+        }
+
+        function renderBarras(data, campo, targetId, useAbsoluteMax = false) {
+            const container = document.getElementById(targetId);
+            container.innerHTML = '';
+            
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--muted);padding:20px">Sin datos registrados</p>';
+                return;
+            }
+
+            const conteo = {};
+            data.forEach(d => {
+                const val = d[campo] || "Sin asignar";
+                conteo[val] = (conteo[val] || 0) + 1;
+            });
+
+            const ordenados = Object.entries(conteo).sort((a,b) => b[1] - a[1]);
+            const maxVal = useAbsoluteMax ? ordenados[0][1] : data.length;
+
+            ordenados.forEach(([label, cantidad]) => {
+                const porc = ((cantidad / maxVal) * 100).toFixed(0);
+                const realPorc = ((cantidad / data.length) * 100).toFixed(1);
+                
+                // Mapeo de nombres de tipos para mejor lectura
+                let labelText = label;
+                if(label === 'zimbra') labelText = 'Zimbra (Correo)';
+                if(label === 'whatsapp') labelText = 'WhatsApp';
+                
+                const html = `
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-label">${labelText}</span>
+                            <span><b>${cantidad}</b> <small>(${realPorc}%)</small></span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${porc}%; background-color: ${getColor(label)}"></div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function getColor(label) {
+            const colors = {
+                'presencial': 'var(--success)',
+                'telefonica': 'var(--warning)',
+                'whatsapp': '#af52de',
+                'zimbra': 'var(--danger)'
+            };
+            return colors[label] || 'var(--primary)';
+        }
+
+        userSelector.addEventListener('change', actualizarDashboard);
+        init();
+    </script>
+</body>
+</html>

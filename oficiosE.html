@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas - Registro de Oficios (Defensoría 6)</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: var(--card);
+            padding: 1.25rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Banner de Error */
+        #error-banner {
+            display: none;
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Filtros */
+        .filter-section {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem; }
+        select { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; background: #fff; }
+
+        /* KPIs */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .kpi-card .value { font-size: 2.2rem; font-weight: 700; display: block; margin-bottom: 5px; }
+        .kpi-card .label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+
+        /* Paneles de Datos */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 850px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 { font-size: 0.95rem; margin-top: 0; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; }
+
+        /* Barras de Progreso */
+        .bar-item { margin-bottom: 1.25rem; }
+        .bar-info { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem; }
+        .bar-bg { background: #f1f5f9; height: 8px; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--primary); transition: width 0.6s ease; }
+
+        #loader {
+            position: fixed; inset: 0; background: #fff; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <i class="fas fa-file-contract fa-spin fa-3x" style="color: var(--primary);"></i>
+        <p style="margin-top: 1rem; font-weight: 600; color: #64748b;">Sincronizando Libro de Oficios...</p>
+    </div>
+
+    <header>
+        <h1>Defensoría Civil y Comercial 6</h1>
+        <div style="font-size: 0.8rem; color: #64748b; font-weight: 600;">ESTADÍSTICAS DE OFICIOS</div>
+    </header>
+
+    <main class="container">
+        <div id="error-banner">
+            <i class="fas fa-exclamation-circle"></i> <span id="error-text"></span>
+        </div>
+
+        <section class="filter-section">
+            <label><i class="fas fa-filter"></i> Seleccionar Empleado Responsable:</label>
+            <select id="userSelector">
+                <option value="todos">--- Mostrar Todo el Personal ---</option>
+            </select>
+        </section>
+
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <span class="value" id="valTotal">0</span>
+                <span class="label">Total Oficios</span>
+            </div>
+            <div class="kpi-card" style="border-bottom-color: var(--success);">
+                <span class="value" id="valFirmados">0</span>
+                <span class="label">Con Firma Defensor</span>
+            </div>
+            <div class="kpi-card" style="border-bottom-color: var(--warning);">
+                <span class="value" id="valPendientes">0</span>
+                <span class="label">Oficios Pendientes</span>
+            </div>
+            <div class="kpi-card" style="border-bottom-color: var(--info);">
+                <span class="value" id="valFirmaSecretario">0</span>
+                <span class="label">Con Firma Secretario</span>
+            </div>
+        </section>
+
+        <section class="dashboard-grid">
+            <div class="panel">
+                <h2><span><i class="fas fa-tags"></i> Por Temática</span> <i class="fas fa-chart-bar" style="opacity:0.3"></i></h2>
+                <div id="listTematicas"></div>
+            </div>
+
+            <div class="panel">
+                <h2 id="secTitle"><span><i class="fas fa-users"></i> Ranking de Trabajo</span></h2>
+                <div id="listSecundario"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Configuración de Firebase (Extraída de tu oficios.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbsfhav_5D3aG0yev-p2fl_vtBLCmmQpk",
+            authDomain: "libro-oficios.firebaseapp.com",
+            projectId: "libro-oficios",
+            storageBucket: "libro-oficios.firebasestorage.app",
+            messagingSenderId: "141084330855",
+            appId: "1:141084330855:web:caf90706a746c6f3b0bdc2"
+        };
+
+        // Lista de empleados definida en tu archivo original
+        const empleados = [
+            "Bazante Nadia Romina", "Cardozo Maria Raquel", "Cedron Noelia Aurora", 
+            "Corrales Alicia Mariela", "Escobar Monica Graciela", "Fioravante Romulo", 
+            "Gonzalez Alberto Misael", "Gonzalez Juan Jose", "Gudiño Natalia Esther", 
+            "Magnani Enzo Luciano", "Pablos Patricia", "Palacios Ana Gabriela", 
+            "Ramos Marcelo Gustavo", "Riveros Patricia Soledad", "Sosa Rita Cecilia"
+        ];
+
+        let datosOficios = [];
+
+        // Inicializar Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            var db = firebase.firestore();
+        } catch (e) {
+            handleError("Error de inicialización: " + e.message);
+        }
+
+        function initApp() {
+            // Cargar Dropdown
+            const selector = document.getElementById('userSelector');
+            empleados.sort().forEach(e => selector.add(new Option(e, e)));
+
+            // Escuchar cambios en la colección "oficios"
+            db.collection("oficios").onSnapshot((snapshot) => {
+                datosOficios = [];
+                snapshot.forEach(doc => datosOficios.push(doc.data()));
+                
+                renderDashboard();
+                document.getElementById('loader').style.display = 'none';
+            }, (error) => {
+                handleError("Error de Firestore: " + error.message);
+                document.getElementById('loader').style.display = 'none';
+            });
+        }
+
+        function renderDashboard() {
+            const selected = document.getElementById('userSelector').value;
+            const isGlobal = selected === 'todos';
+            
+            const filtrados = isGlobal ? datosOficios : datosOficios.filter(o => o.assignedUser === selected);
+
+            // 1. KPIs
+            const total = filtrados.length;
+            const firmados = filtrados.filter(o => o.firmaDefensor === true || o.firmaDefensor === "Sí").length;
+            const firmadosSecretario = filtrados.filter(o => o.firmaSecretario === true || o.firmaSecretario === "Sí").length;
+            
+            document.getElementById('valTotal').innerText = total;
+            document.getElementById('valFirmados').innerText = firmados;
+            document.getElementById('valPendientes').innerText = total - firmados;
+            document.getElementById('valFirmaSecretario').innerText = firmadosSecretario;
+
+            // 2. Gráfico de Temáticas (Topic)
+            renderBars(filtrados, 'topic', 'listTematicas');
+
+            // 3. Panel Secundario dinámico
+            const secTitle = document.getElementById('secTitle');
+            if (isGlobal) {
+                secTitle.innerHTML = '<span><i class="fas fa-users"></i> Ranking de Oficios por Empleado</span>';
+                renderBars(filtrados, 'assignedUser', 'listSecundario', true);
+            } else {
+                secTitle.innerHTML = '<span><i class="fas fa-info-circle"></i> Detalle de Firma</span>';
+                renderStatusFirma(filtrados);
+            }
+        }
+
+        function renderBars(data, key, containerId, scaleByMax = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:2rem;">Sin datos</p>';
+                return;
+            }
+
+            const counts = {};
+            data.forEach(d => {
+                const label = d[key] || "Sin especificar";
+                counts[label] = (counts[label] || 0) + 1;
+            });
+
+            const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+            const maxVal = scaleByMax ? sorted[0][1] : data.length;
+
+            sorted.forEach(([label, cant]) => {
+                const width = (cant / maxVal * 100).toFixed(0);
+                const perc = (cant / data.length * 100).toFixed(1);
+                
+                container.innerHTML += `
+                    <div class="bar-item">
+                        <div class="bar-info">
+                            <span style="font-weight:600">${label}</span>
+                            <span><b>${cant}</b> <small style="color:#64748b">(${perc}%)</small></span>
+                        </div>
+                        <div class="bar-bg">
+                            <div class="bar-fill" style="width: ${width}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderStatusFirma(data) {
+            const container = document.getElementById('listSecundario');
+            const total = data.length;
+            const firmados = data.filter(o => o.firmaDefensor === true || o.firmaDefensor === "Sí").length;
+            const pendientes = total - firmados;
+
+            const html = `
+                <div class="bar-item">
+                    <div class="bar-info"><span>Firmados</span><strong>${firmados}</strong></div>
+                    <div class="bar-bg"><div class="bar-fill" style="width: ${total > 0 ? (firmados/total*100) : 0}%; background: var(--success)"></div></div>
+                </div>
+                <div class="bar-item" style="margin-top:1.5rem">
+                    <div class="bar-info"><span>Pendientes</span><strong>${pendientes}</strong></div>
+                    <div class="bar-bg"><div class="bar-fill" style="width: ${total > 0 ? (pendientes/total*100) : 0}%; background: var(--warning)"></div></div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function handleError(msg) {
+            const banner = document.getElementById('error-banner');
+            banner.style.display = 'block';
+            document.getElementById('error-text').innerText = msg;
+        }
+
+        document.getElementById('userSelector').addEventListener('change', renderDashboard);
+        window.onload = initApp;
+    </script>
+</body>
+</html>
