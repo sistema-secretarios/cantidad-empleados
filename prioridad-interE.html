@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prioridad e Intervenciones</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            /* Paleta General */
+            --bg: #f0f2f5;
+            --surface: #ffffff;
+            --text-main: #1f2937;
+            --text-sec: #6b7280;
+            --border: #e5e7eb;
+            
+            /* Colores para Prioridad - BASADOS EN CAUSAS.HTML */
+            --prioridad-alta: #dc3545;     /* Rojo */
+            --prioridad-media: #ff8c00;    /* Naranja */
+            --prioridad-baja: #28a745;     /* Verde */
+            --prioridad-ninguna: #6c757d;  /* Gris */
+            
+            /* Colores para Intervenciones - Paleta de colores */
+            --color-1: #3b82f6;   /* Azul */
+            --color-2: #8b5cf6;   /* Violeta */
+            --color-3: #ec4899;   /* Rosa */
+            --color-4: #14b8a6;   /* Turquesa */
+            --color-5: #f97316;   /* Naranja */
+            --color-6: #84cc16;   /* Verde claro */
+            --color-7: #6366f1;   /* Índigo */
+            --color-8: #ef4444;   /* Rojo claro */
+            --color-9: #10b981;   /* Esmeralda */
+            --color-10: #0ea5e9;  /* Azul cielo */
+            --color-11: #d946ef;  /* Fuchsia */
+            --color-12: #f59e0b;  /* Ámbar */
+            
+            --radius: 16px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.5;
+        }
+
+        /* --- Header --- */
+        header {
+            background: var(--surface);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        
+        .header-title p {
+            margin: 4px 0 0;
+            color: var(--text-sec);
+            font-size: 0.9rem;
+        }
+
+        /* --- Main Layout --- */
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* --- Filtros --- */
+        .filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-sec);
+        }
+
+        select {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background-color: #f9fafb;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+            min-width: 200px;
+        }
+        
+        select:hover { 
+            border-color: #d1d5db; 
+        }
+        
+        select:focus { 
+            border-color: var(--color-1); 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+        }
+
+        /* --- KPI Grid --- */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border-top: 5px solid;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: var(--shadow-lg);
+        }
+
+        .kpi-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 10px; 
+        }
+        
+        .kpi-icon {
+            width: 36px; 
+            height: 36px;
+            border-radius: 8px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        
+        .kpi-title { 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            color: var(--text-sec); 
+            letter-spacing: 0.5px; 
+        }
+        
+        .kpi-value { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            color: var(--text-main); 
+            line-height: 1; 
+            margin: 10px 0;
+        }
+        
+        .kpi-sub { 
+            font-size: 0.8rem; 
+            margin-top: 8px; 
+            color: var(--text-sec); 
+        }
+        
+        .kpi-sub strong { 
+            color: var(--text-main); 
+        }
+
+        /* Colores para tarjetas de Prioridad - BASADOS EN CAUSAS.HTML */
+        .kpi-prioridad-alta { 
+            border-color: var(--prioridad-alta); 
+        }
+        
+        .kpi-prioridad-alta .kpi-icon { 
+            background: #fef2f2; 
+            color: var(--prioridad-alta); 
+        }
+        
+        .kpi-prioridad-media { 
+            border-color: var(--prioridad-media); 
+        }
+        
+        .kpi-prioridad-media .kpi-icon { 
+            background: #fffbeb; 
+            color: var(--prioridad-media); 
+        }
+        
+        .kpi-prioridad-baja { 
+            border-color: var(--prioridad-baja); 
+        }
+        
+        .kpi-prioridad-baja .kpi-icon { 
+            background: #ecfdf5; 
+            color: var(--prioridad-baja); 
+        }
+        
+        .kpi-prioridad-ninguna { 
+            border-color: var(--prioridad-ninguna); 
+        }
+        
+        .kpi-prioridad-ninguna .kpi-icon { 
+            background: #f3f4f6; 
+            color: var(--prioridad-ninguna); 
+        }
+
+        /* Colores para tarjetas de Intervenciones - Dinámicos */
+        .kpi-intervencion-color-1 { border-color: var(--color-1); }
+        .kpi-intervencion-color-1 .kpi-icon { background: #eff6ff; color: var(--color-1); }
+        
+        .kpi-intervencion-color-2 { border-color: var(--color-2); }
+        .kpi-intervencion-color-2 .kpi-icon { background: #f5f3ff; color: var(--color-2); }
+        
+        .kpi-intervencion-color-3 { border-color: var(--color-3); }
+        .kpi-intervencion-color-3 .kpi-icon { background: #fdf2f8; color: var(--color-3); }
+        
+        .kpi-intervencion-color-4 { border-color: var(--color-4); }
+        .kpi-intervencion-color-4 .kpi-icon { background: #f0fdfa; color: var(--color-4); }
+        
+        .kpi-intervencion-color-5 { border-color: var(--color-5); }
+        .kpi-intervencion-color-5 .kpi-icon { background: #fff7ed; color: var(--color-5); }
+        
+        .kpi-intervencion-color-6 { border-color: var(--color-6); }
+        .kpi-intervencion-color-6 .kpi-icon { background: #f7fee7; color: var(--color-6); }
+        
+        .kpi-intervencion-color-7 { border-color: var(--color-7); }
+        .kpi-intervencion-color-7 .kpi-icon { background: #eef2ff; color: var(--color-7); }
+        
+        .kpi-intervencion-color-8 { border-color: var(--color-8); }
+        .kpi-intervencion-color-8 .kpi-icon { background: #fef2f2; color: var(--color-8); }
+        
+        .kpi-intervencion-color-9 { border-color: var(--color-9); }
+        .kpi-intervencion-color-9 .kpi-icon { background: #ecfdf5; color: var(--color-9); }
+        
+        .kpi-intervencion-color-10 { border-color: var(--color-10); }
+        .kpi-intervencion-color-10 .kpi-icon { background: #f0f9ff; color: var(--color-10); }
+        
+        .kpi-intervencion-color-11 { border-color: var(--color-11); }
+        .kpi-intervencion-color-11 .kpi-icon { background: #fdf4ff; color: var(--color-11); }
+        
+        .kpi-intervencion-color-12 { border-color: var(--color-12); }
+        .kpi-intervencion-color-12 .kpi-icon { background: #fffbeb; color: var(--color-12); }
+
+        /* --- Dashboard Rows --- */
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 1000px) { 
+            .dashboard-row { 
+                grid-template-columns: 1fr; 
+            } 
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .card-title { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+
+        /* Barras de Progreso / Listas */
+        .stat-item { 
+            margin-bottom: 12px; 
+        }
+        
+        .stat-info { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 6px; 
+            font-size: 0.9rem; 
+        }
+        
+        .stat-label { 
+            font-weight: 500; 
+        }
+        
+        .stat-num { 
+            font-weight: 700; 
+        }
+        
+        .progress-bar { 
+            height: 8px; 
+            background: #e5e7eb; 
+            border-radius: 4px; 
+            overflow: hidden; 
+        }
+        
+        .progress-fill { 
+            height: 100%; 
+            border-radius: 4px; 
+            transition: width 0.5s ease; 
+        }
+
+        /* Loading */
+        #loader {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95); 
+            z-index: 50;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            flex-direction: column;
+        }
+        
+        .spinner {
+            width: 40px; 
+            height: 40px; 
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid var(--color-1); 
+            border-radius: 50%;
+            animation: spin 1s linear infinite; 
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin { 
+            0% { 
+                transform: rotate(0deg); 
+            } 
+            100% { 
+                transform: rotate(360deg); 
+            } 
+        }
+
+        /* Totales */
+        .total-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 2rem;
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .total-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--color-1);
+            margin-bottom: 0.5rem;
+        }
+        
+        .total-label {
+            font-size: 1rem;
+            color: var(--text-sec);
+            font-weight: 600;
+        }
+
+        /* Intervenciones sin datos */
+        .no-data-message {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-sec);
+            font-size: 1.1rem;
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            header {
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .filters {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            select {
+                min-width: 150px;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1rem;
+            }
+            
+            .kpi-value {
+                font-size: 2rem;
+            }
+            
+            .dashboard-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .total-value {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-card {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="font-weight: 600; color: var(--text-sec);">Cargando datos de Firebase...</div>
+    </div>
+
+        <div class="filters">
+            <span class="filter-label">Filtrar por:</span>
+            <select id="filterType">
+                <option value="prioridad">Prioridad</option>
+                <option value="intervencion">Intervención</option>
+            </select>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <div class="total-container">
+            <div class="total-value" id="totalCausas">0</div>
+            <div class="total-label">Total de Causas</div>
+        </div>
+        
+        <section class="kpi-grid" id="kpiGrid">
+            <!-- Las tarjetas KPI se generarán dinámicamente -->
+        </section>
+
+        <section class="dashboard-row">
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title"><i class="fas fa-chart-pie"></i> Distribución</span>
+                </div>
+                <div id="distributionChart" style="flex:1; display:flex; flex-direction:column; justify-content:center; gap: 20px;">
+                    <!-- Las barras de distribución se generarán dinámicamente -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title"><i class="fas fa-info-circle"></i> Resumen</span>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap: 20px;">
+                    
+                    <div class="stat-item">
+                        <div class="stat-info">
+                            <span class="stat-label" style="color:var(--text-sec)">Total Causas Analizadas</span>
+                            <span class="stat-num" id="resumenTotal">0</span>
+                        </div>
+                        <div class="progress-bar"><div id="barTotal" class="progress-fill" style="width:100%; background:#3b82f6"></div></div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-info">
+                            <span class="stat-label" style="color:var(--prioridad-alta)">Sin Datos / Sin Asignar</span>
+                            <span class="stat-num" id="resumenSinDatos">0</span>
+                        </div>
+                        <div class="progress-bar"><div id="barSinDatos" class="progress-fill" style="width:0%; background:#9ca3af"></div></div>
+                    </div>
+
+                    <div style="margin-top:20px; padding:15px; background:#f9fafb; border-radius:8px; font-size:0.9rem; color:var(--text-sec);">
+                        <i class="fas fa-database"></i> Datos obtenidos en tiempo real desde Firebase.
+                        <br><br>
+                        <small>Última actualización: <span id="lastUpdate">--/--/---- --:--</span></small>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // ===== CONFIGURACIÓN DE FIREBASE =====
+        // USANDO LA MISMA CONFIGURACIÓN QUE CAUSAS.HTML
+        const firebaseConfig = {
+            apiKey: "AIzaSyBt6X0u0BpiNPcV2SNPrN-spCmjl2AhZaA",
+            authDomain: "causas-defensoria.firebaseapp.com",
+            projectId: "causas-defensoria",
+            storageBucket: "causas-defensoria.firebasestorage.app",
+            messagingSenderId: "186064671470",
+            appId: "1:186064671470:web:b58bae5eadbe6e469f19ff"
+        };
+        
+        // ===== INICIALIZACIÓN DE FIREBASE =====
+        let app;
+        let db;
+        
+        try {
+            if (firebase.apps && firebase.apps.length > 0) {
+                app = firebase.app();
+                console.log("Firebase ya está inicializado");
+            } else {
+                console.log("Inicializando Firebase...");
+                app = firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.firestore();
+            console.log("Firebase Firestore inicializado correctamente");
+        } catch (e) {
+            console.error("Error al inicializar Firebase:", e);
+            mostrarError("Error al conectar con la base de datos. Por favor, recarga la página.");
+        }
+
+        // ===== VARIABLES GLOBALES =====
+        let datosCache = [];
+        let filterType = "prioridad"; // Valor por defecto
+        
+        // Paleta de colores para intervenciones
+        const coloresIntervencion = [
+            'var(--color-1)', 'var(--color-2)', 'var(--color-3)', 'var(--color-4)', 
+            'var(--color-5)', 'var(--color-6)', 'var(--color-7)', 'var(--color-8)',
+            'var(--color-9)', 'var(--color-10)', 'var(--color-11)', 'var(--color-12)'
+        ];
+        
+        // Iconos para intervenciones
+        const iconosIntervencion = [
+            'fas fa-gavel', 'fas fa-balance-scale', 'fas fa-user-tie', 
+            'fas fa-user-shield', 'fas fa-book', 'fas fa-handshake',
+            'fas fa-users', 'fas fa-file-contract', 'fas fa-scale-balanced',
+            'fas fa-landmark', 'fas fa-graduation-cap', 'fas fa-briefcase'
+        ];
+
+        // ===== ELEMENTOS DEL DOM =====
+        const loader = document.getElementById('loader');
+        const filterTypeSelect = document.getElementById('filterType');
+        const totalCausasEl = document.getElementById('totalCausas');
+        const lastUpdateEl = document.getElementById('lastUpdate');
+        const kpiGrid = document.getElementById('kpiGrid');
+
+        // ===== FUNCIONES UTILITARIAS =====
+        function mostrarError(mensaje) {
+            loader.innerHTML = `
+                <div style="text-align:center; color:#dc3545;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:3rem; margin-bottom:1rem;"></i>
+                    <h3>Error</h3>
+                    <p>${mensaje}</p>
+                    <button onclick="location.reload()" style="margin-top:1rem; padding:10px 20px; background:#dc3545; color:white; border:none; border-radius:8px; cursor:pointer;">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+        }
+
+        function normalizarTexto(texto) {
+            if (!texto || texto === "null" || texto === "undefined") return null;
+            return texto.toString().trim();
+        }
+
+        function actualizarFecha() {
+            const now = new Date();
+            lastUpdateEl.textContent = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function animarValor(element, valorFinal) {
+            const elemento = document.getElementById(element);
+            if (!elemento) return;
+            
+            let valorActual = parseInt(elemento.textContent) || 0;
+            const diferencia = valorFinal - valorActual;
+            
+            if (diferencia === 0) {
+                elemento.textContent = valorFinal;
+                return;
+            }
+            
+            const paso = Math.ceil(Math.abs(diferencia) / 20);
+            
+            const intervalo = setInterval(() => {
+                if (diferencia > 0) {
+                    valorActual = Math.min(valorActual + paso, valorFinal);
+                } else {
+                    valorActual = Math.max(valorActual - paso, valorFinal);
+                }
+                
+                elemento.textContent = valorActual;
+                
+                if (valorActual === valorFinal) {
+                    clearInterval(intervalo);
+                }
+            }, 30);
+        }
+
+        // ===== FUNCIONES DE ANÁLISIS DE DATOS =====
+        function analizarPrioridades() {
+            const conteo = {
+                alta: 0,
+                media: 0,
+                baja: 0,
+                ninguna: 0,
+                sinDato: 0
+            };
+            
+            datosCache.forEach(causa => {
+                const prioridad = normalizarTexto(causa.prioridad);
+                
+                if (!prioridad || prioridad === "") {
+                    conteo.sinDato++;
+                } else if (prioridad.toLowerCase().includes("alta")) {
+                    conteo.alta++;
+                } else if (prioridad.toLowerCase().includes("media")) {
+                    conteo.media++;
+                } else if (prioridad.toLowerCase().includes("baja")) {
+                    conteo.baja++;
+                } else if (prioridad.toLowerCase().includes("ninguna")) {
+                    conteo.ninguna++;
+                } else {
+                    conteo.sinDato++;
+                }
+            });
+            
+            return conteo;
+        }
+
+        function analizarIntervenciones() {
+            const conteo = {};
+            let sinDato = 0;
+            
+            datosCache.forEach(causa => {
+                const intervencion = normalizarTexto(causa.intervencion);
+                
+                if (!intervencion || intervencion === "") {
+                    sinDato++;
+                } else {
+                    // Usamos la intervención exacta como clave
+                    if (conteo[intervencion]) {
+                        conteo[intervencion]++;
+                    } else {
+                        conteo[intervencion] = 1;
+                    }
+                }
+            });
+            
+            // Ordenar por cantidad (de mayor a menor)
+            const intervencionesOrdenadas = Object.entries(conteo)
+                .sort((a, b) => b[1] - a[1]);
+            
+            return {
+                intervenciones: intervencionesOrdenadas,
+                sinDato: sinDato
+            };
+        }
+
+        // ===== FUNCIONES DE RENDERIZADO =====
+        function crearTarjetaKPI(tipo, nombre, valor, colorIndex, esPrioridad = false) {
+            const card = document.createElement('div');
+            let claseColor, icono, titulo;
+            
+            if (esPrioridad) {
+                // Para prioridades
+                claseColor = `kpi-prioridad-${nombre.toLowerCase()}`;
+                icono = obtenerIconoPrioridad(nombre);
+                titulo = nombre === 'sinDato' ? 'Sin Prioridad' : 
+                        nombre === 'ninguna' ? 'Sin Prioridad' : 
+                        `Prioridad ${nombre.charAt(0).toUpperCase() + nombre.slice(1)}`;
+            } else {
+                // Para intervenciones
+                claseColor = `kpi-intervencion-color-${(colorIndex % 12) + 1}`;
+                icono = iconosIntervencion[colorIndex % iconosIntervencion.length];
+                titulo = nombre;
+            }
+            
+            card.className = `kpi-card ${claseColor}`;
+            card.id = `${tipo}-${nombre.replace(/\s+/g, '-').toLowerCase()}`;
+            
+            card.innerHTML = `
+                <div>
+                    <div class="kpi-header">
+                        <div class="kpi-icon"><i class="${icono}"></i></div>
+                        <span class="kpi-title">${titulo}</span>
+                    </div>
+                    <div class="kpi-value">${valor}</div>
+                </div>
+                <div class="kpi-sub">
+                    ${esPrioridad ? 'Causas con ' + (nombre === 'sinDato' ? 'prioridad sin asignar' : nombre.toLowerCase() + ' prioridad') : 'Causas con esta intervención'}
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function obtenerIconoPrioridad(prioridad) {
+            switch(prioridad.toLowerCase()) {
+                case 'alta': return 'fas fa-exclamation-triangle';
+                case 'media': return 'fas fa-clock';
+                case 'baja': return 'fas fa-check-circle';
+                case 'ninguna': return 'fas fa-minus-circle';
+                case 'sindato': return 'fas fa-question-circle';
+                default: return 'fas fa-flag';
+            }
+        }
+
+        function renderizarKPIs() {
+            kpiGrid.innerHTML = '';
+            
+            if (filterType === "prioridad") {
+                const conteo = analizarPrioridades();
+                
+                // Crear KPIs para cada tipo de prioridad
+                Object.entries(conteo).forEach(([nombre, valor], index) => {
+                    if (valor > 0) {
+                        const tarjeta = crearTarjetaKPI('prioridad', nombre, valor, index, true);
+                        kpiGrid.appendChild(tarjeta);
+                    }
+                });
+                
+                // Actualizar gráfico de distribución
+                renderizarDistribucionPrioridad(conteo);
+                
+                // Actualizar resumen
+                actualizarResumen(conteo.sinDato || 0);
+                
+            } else {
+                const { intervenciones, sinDato } = analizarIntervenciones();
+                
+                if (intervenciones.length === 0) {
+                    kpiGrid.innerHTML = `
+                        <div class="no-data-message" style="grid-column: 1 / -1;">
+                            <i class="fas fa-database fa-3x" style="margin-bottom: 1rem; color: var(--text-sec);"></i>
+                            <h3>No hay datos de intervenciones</h3>
+                            <p>No se encontraron intervenciones registradas en las causas.</p>
+                        </div>
+                    `;
+                } else {
+                    // Crear KPIs para cada tipo de intervención
+                    intervenciones.forEach(([nombre, valor], index) => {
+                        const tarjeta = crearTarjetaKPI('intervencion', nombre, valor, index, false);
+                        kpiGrid.appendChild(tarjeta);
+                    });
+                    
+                    // Si hay intervenciones sin datos, agregar tarjeta
+                    if (sinDato > 0) {
+                        const tarjetaSinDato = document.createElement('div');
+                        tarjetaSinDato.className = 'kpi-card kpi-prioridad-ninguna';
+                        tarjetaSinDato.innerHTML = `
+                            <div>
+                                <div class="kpi-header">
+                                    <div class="kpi-icon"><i class="fas fa-question-circle"></i></div>
+                                    <span class="kpi-title">Sin Intervención</span>
+                                </div>
+                                <div class="kpi-value">${sinDato}</div>
+                            </div>
+                            <div class="kpi-sub">
+                                Causas sin intervención asignada
+                            </div>
+                        `;
+                        kpiGrid.appendChild(tarjetaSinDato);
+                    }
+                    
+                    // Actualizar gráfico de distribución
+                    renderizarDistribucionIntervencion(intervenciones, sinDato);
+                    
+                    // Actualizar resumen
+                    actualizarResumen(sinDato);
+                }
+            }
+        }
+
+        function renderizarDistribucionPrioridad(conteo) {
+            const container = document.getElementById('distributionChart');
+            const total = Object.values(conteo).reduce((a, b) => a + b, 0);
+            
+            if (total === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-sec); padding:20px;">Sin datos para mostrar</div>';
+                return;
+            }
+            
+            const colores = {
+                alta: 'var(--prioridad-alta)',
+                media: 'var(--prioridad-media)',
+                baja: 'var(--prioridad-baja)',
+                ninguna: 'var(--prioridad-ninguna)',
+                sinDato: '#9ca3af'
+            };
+            
+            const etiquetas = {
+                alta: 'Alta',
+                media: 'Media',
+                baja: 'Baja',
+                ninguna: 'Sin Prioridad',
+                sinDato: 'Sin Dato'
+            };
+            
+            let html = '';
+            Object.entries(conteo).forEach(([key, valor]) => {
+                if (valor > 0) {
+                    const porcentaje = total ? ((valor / total) * 100).toFixed(1) : 0;
+                    
+                    html += `
+                        <div class="stat-item">
+                            <div class="stat-info">
+                                <span class="stat-label" style="color:${colores[key]}">${etiquetas[key]}</span>
+                                <span class="stat-num">${valor} (${porcentaje}%)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:${porcentaje}%; background:${colores[key]}"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function renderizarDistribucionIntervencion(intervenciones, sinDato) {
+            const container = document.getElementById('distributionChart');
+            const totalConDatos = intervenciones.reduce((sum, [_, count]) => sum + count, 0);
+            const total = totalConDatos + sinDato;
+            
+            if (total === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-sec); padding:20px;">Sin datos para mostrar</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            // Mostrar las primeras 10 intervenciones (las más comunes)
+            const topIntervenciones = intervenciones.slice(0, 10);
+            
+            topIntervenciones.forEach(([nombre, valor], index) => {
+                const porcentaje = total ? ((valor / total) * 100).toFixed(1) : 0;
+                const color = coloresIntervencion[index % coloresIntervencion.length];
+                
+                html += `
+                    <div class="stat-item">
+                        <div class="stat-info">
+                            <span class="stat-label" style="color:${color}">${nombre}</span>
+                            <span class="stat-num">${valor} (${porcentaje}%)</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:${porcentaje}%; background:${color}"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Si hay más de 10 intervenciones, mostrar "Otras"
+            if (intervenciones.length > 10) {
+                const otrasCount = intervenciones.slice(10).reduce((sum, [_, count]) => sum + count, 0);
+                if (otrasCount > 0) {
+                    const porcentaje = total ? ((otrasCount / total) * 100).toFixed(1) : 0;
+                    html += `
+                        <div class="stat-item">
+                            <div class="stat-info">
+                                <span class="stat-label" style="color:#9ca3af">Otras intervenciones</span>
+                                <span class="stat-num">${otrasCount} (${porcentaje}%)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:${porcentaje}%; background:#9ca3af"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Si hay sin datos, mostrar
+            if (sinDato > 0) {
+                const porcentaje = total ? ((sinDato / total) * 100).toFixed(1) : 0;
+                html += `
+                    <div class="stat-item">
+                        <div class="stat-info">
+                            <span class="stat-label" style="color:#6b7280">Sin intervención</span>
+                            <span class="stat-num">${sinDato} (${porcentaje}%)</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:${porcentaje}%; background:#6b7280"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function actualizarResumen(sinDatos) {
+            const total = datosCache.length;
+            document.getElementById('resumenTotal').textContent = total;
+            document.getElementById('resumenSinDatos').textContent = sinDatos;
+            
+            const porcentajeSinDatos = total ? ((sinDatos / total) * 100) : 0;
+            document.getElementById('barSinDatos').style.width = `${porcentajeSinDatos}%`;
+        }
+
+        // ===== FUNCIÓN PRINCIPAL DE ACTUALIZACIÓN =====
+        function actualizarDashboard() {
+            totalCausasEl.textContent = datosCache.length;
+            actualizarFecha();
+            renderizarKPIs();
+            loader.style.display = 'none';
+        }
+
+        // ===== SUSCRIPCIÓN A DATOS DE FIREBASE =====
+        function suscribirCausas() {
+            if (!db) {
+                mostrarError("No se pudo conectar con Firebase");
+                return;
+            }
+            
+            console.log("Suscribiendo a cambios en causas...");
+            
+            db.collection("causas").onSnapshot(
+                (snapshot) => {
+                    console.log("Datos recibidos:", snapshot.size, "registros");
+                    datosCache = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        datosCache.push({ 
+                            id: doc.id, 
+                            prioridad: data.prioridad || null,
+                            intervencion: data.intervencion || null,
+                            ...data 
+                        });
+                    });
+                    actualizarDashboard();
+                },
+                (error) => {
+                    console.error("Error en onSnapshot causas:", error);
+                    mostrarError("Error al cargar los datos: " + error.message);
+                }
+            );
+        }
+
+        // ===== INICIALIZACIÓN DE LA APLICACIÓN =====
+        function initApp() {
+            try {
+                console.log("Inicializando aplicación...");
+                
+                if (!app || !db) {
+                    mostrarError("Error: No se pudo conectar con la base de datos");
+                    return;
+                }
+                
+                // Configurar el filtro
+                filterTypeSelect.addEventListener('change', function() {
+                    filterType = this.value;
+                    actualizarDashboard();
+                });
+                
+                // Suscribirse a los datos
+                suscribirCausas();
+                
+                console.log("Aplicación inicializada correctamente");
+            } catch (error) {
+                console.error("Error durante la inicialización:", error);
+                mostrarError("Error al cargar los datos iniciales: " + error.message);
+            }
+        }
+
+        // ===== EJECUCIÓN AL CARGAR LA PÁGINA =====
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
