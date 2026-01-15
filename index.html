@@ -42,104 +42,60 @@
         header {
             background-color: var(--light-color);
             box-shadow: var(--shadow);
-            padding: 1.5rem 2rem;
+            padding: 0.5rem 2rem;
             border-bottom: 4px solid var(--primary-color);
-        }
-
-        .logo-container {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
         }
 
-        .logo-icon {
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-right: 1rem;
+        .module-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: center;
         }
 
-        .app-title {
-            color: var(--primary-color);
-            font-size: 1.8rem;
-            font-weight: 700;
+        .module-btn {
+            background-color: var(--light-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            white-space: nowrap;
         }
 
-        .app-subtitle {
-            color: var(--text-light);
-            font-size: 1.2rem;
-            font-weight: 500;
-            margin-left: 3.5rem;
+        .module-btn:hover {
+            background-color: rgba(0, 102, 204, 0.05);
+            border-color: var(--primary-color);
+        }
+
+        .module-btn.active {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+            border-color: var(--primary-color);
         }
 
         /* Main Content Styles */
         main {
             flex: 1;
-            display: flex;
             padding: 2rem;
-            gap: 2rem;
-        }
-
-        /* Cards Panel */
-        .cards-panel {
-            flex: 1;
-            max-width: 300px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        .card {
-            background-color: var(--light-color);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            transition: var(--transition);
-            border-left: 5px solid var(--primary-color);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 102, 204, 0.15);
-        }
-
-        .card.active {
-            border-left-color: var(--primary-dark);
-            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
-        }
-
-        .card-icon {
-            background-color: rgba(0, 102, 204, 0.1);
-            color: var(--primary-color);
-            padding: 1.2rem;
-            text-align: center;
-            font-size: 1.8rem;
-        }
-
-        .card-content {
-            padding: 1.2rem;
-        }
-
-        .card-title {
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .card-desc {
-            font-size: 0.9rem;
-            color: var(--text-light);
         }
 
         /* Content Panel */
         .content-panel {
-            flex: 3;
             background-color: var(--light-color);
             border-radius: 10px;
             box-shadow: var(--shadow);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
 
         .content-header {
@@ -152,13 +108,6 @@
             color: var(--primary-color);
             font-size: 1.5rem;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-        }
-
-        .content-title i {
-            font-size: 1.8rem;
         }
 
         .content-area {
@@ -213,16 +162,6 @@
             margin: 0 auto 1.5rem;
         }
 
-        .url-display {
-            background-color: var(--light-gray);
-            border-radius: 6px;
-            padding: 1rem;
-            margin-top: 2rem;
-            font-family: monospace;
-            word-break: break-all;
-            border-left: 4px solid var(--primary-color);
-        }
-
         /* Footer */
         footer {
             background-color: var(--light-color);
@@ -249,19 +188,32 @@
 
         /* Responsive Design */
         @media (max-width: 992px) {
-            main {
-                flex-direction: column;
+            .module-buttons {
+                gap: 0.4rem;
             }
             
-            .cards-panel {
-                max-width: 100%;
-                grid-template-columns: repeat(2, 1fr);
+            .module-btn {
+                padding: 0.7rem 1rem;
+                font-size: 0.85rem;
             }
         }
 
         @media (max-width: 768px) {
-            .cards-panel {
-                grid-template-columns: 1fr;
+            header {
+                flex-direction: column;
+                padding: 0.5rem 1rem;
+                gap: 0.5rem;
+            }
+            
+            .module-buttons {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+                width: 100%;
+            }
+            
+            .module-btn {
+                flex-shrink: 0;
             }
             
             .footer-info {
@@ -269,127 +221,62 @@
                 gap: 1rem;
             }
             
-            .app-title {
-                font-size: 1.5rem;
-            }
-            
-            .app-subtitle {
-                font-size: 1rem;
-                margin-left: 0;
-            }
-            
-            .logo-container {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .logo-icon {
-                margin-right: 0;
-                margin-bottom: 0.5rem;
+            .content-area {
+                padding: 1.5rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
+        <header>
+            <div class="module-buttons">
+                <!-- Botón 1: Causas -->
+                <button class="module-btn active" data-module="causas">
+                    Causas
+                </button>
                 
-        <main>
-            <div class="cards-panel">
-                <!-- Card 1: Causas -->
-                <div class="card active" data-module="causas">
-                    <div class="card-icon">
-                        <i class="fas fa-balance-scale"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Causas</h3>
-                        <p class="card-desc">Gestión y seguimiento de causas judiciales activas en el sistema.</p>
-                    </div>
-                </div>
+                <!-- Botón 2: Pases Diarios -->
+                <button class="module-btn" data-module="pases">
+                    Pases Diarios
+                </button>
                 
-                <!-- Card 2: Pases Diarios -->
-                <div class="card" data-module="pases">
-                    <div class="card-icon">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Pases Diarios</h3>
-                        <p class="card-desc">Control de pases y traslados de expedientes entre dependencias.</p>
-                    </div>
-                </div>
+                <!-- Botón 3: Atención al Público -->
+                <button class="module-btn" data-module="atencion">
+                    Atención al Público
+                </button>
                 
-                <!-- Card 3: Atención al Público -->
-                <div class="card" data-module="atencion">
-                    <div class="card-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Atención al Público</h3>
-                        <p class="card-desc">Registro y estadísticas de atención a ciudadanos y consultas.</p>
-                    </div>
-                </div>
+                <!-- Botón 4: Dictamenes -->
+                <button class="module-btn" data-module="dictamenes">
+                    Dictámenes
+                </button>
                 
-                <!-- Card 4: Dictamenes -->
-                <div class="card" data-module="dictamenes">
-                    <div class="card-icon">
-                        <i class="fas fa-file-contract"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Dictámenes</h3>
-                        <p class="card-desc">Generación, seguimiento y archivo de dictámenes legales.</p>
-                    </div>
-                </div>
+                <!-- Botón 5: Oficios -->
+                <button class="module-btn" data-module="oficios">
+                    Oficios
+                </button>
                 
-                <!-- Card 5: Oficios -->
-                <div class="card" data-module="oficios">
-                    <div class="card-icon">
-                        <i class="fas fa-envelope-open-text"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Oficios</h3>
-                        <p class="card-desc">Administración de oficios emitidos y recibidos por la dependencia.</p>
-                    </div>
-                </div>
+                <!-- Botón 6: Partes -->
+                <button class="module-btn" data-module="partes">
+                    Partes
+                </button>
                 
-                <!-- Card 6: Partes -->
-                <div class="card" data-module="partes">
-                    <div class="card-icon">
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Partes</h3>
-                        <p class="card-desc">Registro de partes y ubicación de domicilio.</p>
-                    </div>
-                </div>
+                <!-- Botón 7: Calendario -->
+                <button class="module-btn" data-module="calendario">
+                    Calendario
+                </button>
                 
-                <!-- Card 7: Calendario -->
-                <div class="card" data-module="calendario">
-                    <div class="card-icon">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Calendario</h3>
-                        <p class="card-desc">Agenda de audiencias, plazos procesales y eventos importantes.</p>
-                    </div>
-                </div>
-                
-                <!-- Card 8: Prioridad-Intervención -->
-                <div class="card" data-module="prioridad">
-                    <div class="card-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Prioridad-Intervención</h3>
-                        <p class="card-desc">Seguimiento de casos prioritarios y asignación de intervenciones.</p>
-                    </div>
-                </div>
+                <!-- Botón 8: Prioridad-Intervención -->
+                <button class="module-btn" data-module="prioridad">
+                    Prioridad-Intervención
+                </button>
             </div>
-            
+        </header>
+        
+        <main>
             <div class="content-panel">
                 <div class="content-header">
-                    <h2 class="content-title">
-                        <i class="fas fa-balance-scale"></i>
-                        <span id="module-title">Causas</span>
-                    </h2>
+                    <h2 class="content-title" id="module-title">Causas</h2>
                 </div>
                 
                 <div class="content-area">
@@ -400,7 +287,7 @@
                         </div>
                         <div class="placeholder-text">
                             <h3>Reporte Estadístico del Sistema Digital</h3>
-                            <p>Seleccione uno de los módulos del panel lateral para visualizar los reportes estadísticos correspondientes. Cada módulo mostrará información específica del sistema de gestión de la Defensoría Civil y Comercial 6.</p>
+                            <p>Seleccione uno de los módulos del panel superior para visualizar los reportes estadísticos correspondientes. Cada módulo mostrará información específica del sistema de gestión de la Defensoría Civil y Comercial 6.</p>
                             <p>Esta aplicación permite acceder a los datos de forma integrada y en tiempo real.</p>
                         </div>
                     </div>
@@ -435,84 +322,68 @@
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         currentDateElement.textContent = today.toLocaleDateString('es-ES', options);
         
-        // Define URLs for each module (to be provided by the user)
+        // Define URLs for each module
         const moduleUrls = {
-            causas: "https://ejemplo.com/causas",
-            pases: "https://ejemplo.com/pases-diarios",
-            atencion: "https://ejemplo.com/atencion-publico",
-            dictamenes: "https://ejemplo.com/dictamenes",
-            oficios: "https://ejemplo.com/oficios",
-            partes: "https://ejemplo.com/partes",
-            calendario: "https://ejemplo.com/calendario",
-            prioridad: "https://ejemplo.com/prioridad-intervencion"
+            atencion: "https://sistema-secretarios.github.io/cantidad-empleados/atencionE",
+            calendario: "https://sistema-secretarios.github.io/cantidad-empleados/calendarioE",
+            causas: "https://sistema-secretarios.github.io/cantidad-empleados/causaE",
+            dictamenes: "https://sistema-secretarios.github.io/cantidad-empleados/dictamenE",
+            oficios: "https://sistema-secretarios.github.io/cantidad-empleados/oficiosE",
+            partes: "https://sistema-secretarios.github.io/cantidad-empleados/partesE",
+            pases: "https://sistema-secretarios.github.io/cantidad-empleados/paseE",
+            prioridad: "https://sistema-secretarios.github.io/cantidad-empleados/prioridad-interE"
         };
         
         // Module data for display
         const moduleData = {
             causas: {
                 title: "Causas",
-                icon: "fas fa-balance-scale",
-                description: "Módulo de gestión y seguimiento de causas judiciales activas en el sistema.",
                 url: moduleUrls.causas
             },
             pases: {
                 title: "Pases Diarios",
-                icon: "fas fa-exchange-alt",
-                description: "Control de pases y traslados de expedientes entre dependencias.",
                 url: moduleUrls.pases
             },
             atencion: {
                 title: "Atención al Público",
-                icon: "fas fa-users",
-                description: "Registro y estadísticas de atención a ciudadanos y consultas recibidas.",
                 url: moduleUrls.atencion
             },
             dictamenes: {
                 title: "Dictámenes",
-                icon: "fas fa-file-contract",
-                description: "Generación, seguimiento y archivo de dictámenes legales emitidos.",
                 url: moduleUrls.dictamenes
             },
             oficios: {
                 title: "Oficios",
-                icon: "fas fa-envelope-open-text",
-                description: "Administración de oficios emitidos y recibidos por la dependencia.",
                 url: moduleUrls.oficios
             },
             partes: {
                 title: "Partes",
-                icon: "fas fa-clipboard-list",
-                description: "Registro diario de actividades y novedades de la dependencia.",
                 url: moduleUrls.partes
             },
             calendario: {
                 title: "Calendario",
-                icon: "fas fa-calendar-alt",
-                description: "Agenda de audiencias, plazos procesales y eventos importantes.",
                 url: moduleUrls.calendario
             },
             prioridad: {
                 title: "Prioridad-Intervención",
-                icon: "fas fa-exclamation-triangle",
-                description: "Seguimiento de casos prioritarios y asignación de intervenciones.",
                 url: moduleUrls.prioridad
             }
         };
         
         // Get DOM elements
-        const cards = document.querySelectorAll('.card');
+        const moduleBtns = document.querySelectorAll('.module-btn');
         const moduleTitle = document.getElementById('module-title');
         const initialContent = document.getElementById('initial-content');
         const moduleContentContainer = document.getElementById('module-content-container');
         
         // Function to load module content
         function loadModule(moduleId) {
-            // Update active card
-            cards.forEach(card => {
-                if (card.dataset.module === moduleId) {
-                    card.classList.add('active');
+            // Update active button
+            moduleBtns.forEach(btn => {
+                if (btn.dataset.module === moduleId) {
+                    btn.classList.add('active');
                 } else {
-                    card.classList.remove('active');
+                    btn.classList.remove('active');
                 }
             });
             
@@ -523,56 +394,24 @@
             initialContent.style.display = 'none';
             moduleContentContainer.innerHTML = '';
             
-            // Create module content
+            // Create module content - ONLY IFRAME
             const moduleContent = document.createElement('div');
             moduleContent.className = 'module-content active';
             
-            // Create content structure
+            // Create iframe container with URL
             moduleContent.innerHTML = `
-                <div class="placeholder-content">
-                    <div class="placeholder-icon">
-                        <i class="${moduleData[moduleId].icon}"></i>
-                    </div>
-                    <div class="placeholder-text">
-                        <h3>${moduleData[moduleId].title}</h3>
-                        <p>${moduleData[moduleId].description}</p>
-                        <p>Este módulo mostrará los reportes estadísticos correspondientes a este área de gestión.</p>
-                        
-                        <div class="url-display">
-                            <p><strong>URL del módulo:</strong> ${moduleData[moduleId].url}</p>
-                            <p><em>Nota: En una implementación real, aquí se cargaría el contenido de la URL especificada.</em></p>
-                        </div>
-                        
-                        <div style="margin-top: 2rem; padding: 1.5rem; background-color: #f0f8ff; border-radius: 8px; border-left: 4px solid var(--primary-color);">
-                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">Funcionalidades del módulo:</h4>
-                            <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
-                                <li>Visualización de estadísticas en tiempo real</li>
-                                <li>Generación de reportes personalizados</li>
-                                <li>Filtros por fecha, tipo de causa y estado</li>
-                                <li>Exportación de datos en formatos PDF y Excel</li>
-                                <li>Gráficos interactivos para análisis de datos</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="iframe-container" style="margin-top: 2rem;">
-                    <iframe src="about:blank" title="${moduleData[moduleId].title}" id="module-iframe"></iframe>
+                <div class="iframe-container">
+                    <iframe src="${moduleData[moduleId].url}" title="${moduleData[moduleId].title}" id="module-iframe"></iframe>
                 </div>
             `;
             
             moduleContentContainer.appendChild(moduleContent);
-            
-            // In a real implementation, you would load the actual URL into the iframe
-            // For this example, we're showing a placeholder
-            // To load the actual URL, uncomment the following line:
-            // document.getElementById('module-iframe').src = moduleData[moduleId].url;
         }
         
-        // Add click event listeners to cards
-        cards.forEach(card => {
-            card.addEventListener('click', () => {
-                const moduleId = card.dataset.module;
+        // Add click event listeners to buttons
+        moduleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const moduleId = btn.dataset.module;
                 loadModule(moduleId);
             });
         });
